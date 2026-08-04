@@ -1,0 +1,7 @@
+ZABBIX_URL="http://192.168.3.141/api_jsonrpc.php"
+
+TOKEN="41695624d241effb67e2493ff4ddf2e19ef68561b10938abf78bef77ad07489d"
+
+SQLALCHEMY_DATABASE_URI="sqlite:///inventario.db"
+
+SQLALCHEMY_TRACK_MODIFICATIONS=False

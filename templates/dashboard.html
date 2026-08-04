@@ -1,0 +1,45 @@
+<table>
+
+<tr>
+
+<th>Hostname</th>
+
+<th>IP</th>
+
+<th>Serial</th>
+
+<th>Modelo</th>
+
+<th>MAC</th>
+
+</tr>
+
+{% for h in hosts %}
+
+<tr>
+
+<td>{{h.host}}</td>
+
+<td>{{h.interfaces[0].ip}}</td>
+
+<td>{{h.inventory.serialno_a}}</td>
+
+<td>{{h.inventory.model}}</td>
+
+<td>{{h.inventory.macaddress_a}}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<th>Status</th>
+
+<td>
+{% if h.available == "1" %}
+🟢 Online
+{% else %}
+🔴 Offline
+{% endif %}
+</td>
