@@ -9,12 +9,6 @@
       <button type="submit" class="btn btn-primary">Pesquisar</button>
     </div>
     <div class="col-auto">
-      <form method="post" action="{{ url_for('hosts.export_all') }}">
-        <input type="hidden" name="q" value="{{ q }}">
-        <button type="submit" class="btn btn-outline-success">Exportar CSV</button>
-      </form>
-    </div>
-    <div class="col-auto">
       <a class="btn btn-outline-secondary" href="{{ url_for('hosts.exports_list') }}">Ver Exports</a>
     </div>
   </form>
@@ -28,29 +22,26 @@
         <th>MAC</th>
         <th>Serial</th>
         <th>Modelo</th>
+        <th>Lista de interfaces</th>
+        <th>Interfaces discovery</th>
+        <th>Agente</th>
         <th>Status</th>
-        <th>Username</th>
-        <th>Anydesk</th>
-        <th>Salvar</th>
-        <th>Raw</th>
+        <th>Detalhes</th>
       </tr>
     </thead>
     <tbody>
     {% for h in hosts %}
     <tr>
-      <form method="post" action="{{ url_for('hosts.update_host', hostid=h.hostid) }}">
-        <input type="hidden" name="hostid" value="{{ h.hostid }}">
-        <td><input type="hidden" name="hostname" value="{{ h.host }}">{{ h.host }}</td>
-        <td><input type="hidden" name="ip" value="{{ h.ip or '' }}">{{ h.ip or '' }}</td>
-        <td><input type="hidden" name="mac" value="{{ h.mac or '' }}">{{ h.mac or '' }}</td>
-        <td>{{ h.serial or '' }}</td>
-        <td>{{ h.model or '' }}</td>
-        <td>{% if h.available|int == 1 %}<span class="text-success">🟢 Online</span>{% else %}<span class="text-danger">🔴 Offline</span>{% endif %}</td>
-        <td><input name="username" value="{{ h.override_username or '' }}" class="form-control"></td>
-        <td><input name="anydesk" value="{{ h.override_anydesk or '' }}" class="form-control"></td>
-        <td><button type="submit" class="btn btn-sm btn-primary">Salvar</button></td>
-        <td><a href="{{ url_for('hosts.all_hosts') }}?q={{ h.host }}" class="btn btn-sm btn-link">Ver</a></td>
-      </form>
+      <td>{{ h.host }}</td>
+      <td>{{ h.ip or '' }}</td>
+      <td>{{ h.mac or '' }}</td>
+      <td>{{ h.serial or '' }}</td>
+      <td>{{ h.model or '' }}</td>
+      <td><pre style="max-width:250px;overflow:auto">{{ h.net_if_list or '' }}</pre></td>
+      <td><pre style="max-width:250px;overflow:auto">{{ h.net_if_disc or '' }}</pre></td>
+      <td>{% if h.agente is defined and (h.agente|string).strip() == '1' %}<span class="text-success">Online</span>{% else %}<span class="text-muted">Offline</span>{% endif %}</td>
+      <td>{% if (h.available|default(0)|int) == 1 %}<span class="text-success">🟢 Online</span>{% else %}<span class="text-danger">🔴 Offline</span>{% endif %}</td>
+      <td><a href="{{ url_for('hosts.all_hosts') }}?q={{ h.host }}">Ver</a></td>
     </tr>
     {% endfor %}
     </tbody>
