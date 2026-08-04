@@ -1,17 +1,14 @@
 from database.database import db
+from datetime import datetime
 
-class Computer(db.Model):
-
+class HostOverride(db.Model):
+    __tablename__ = "host_overrides"
     id = db.Column(db.Integer, primary_key=True)
-
-    hostid = db.Column(db.String(30), unique=True)
-
-    hostname = db.Column(db.String(100))
-
-    usuario = db.Column(db.String(100))
-
-    departamento = db.Column(db.String(100))
-
-    patrimonio = db.Column(db.String(50))
-
-    observacao = db.Column(db.Text)
+    zabbix_hostid = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    hostname = db.Column(db.String(256))
+    ip = db.Column(db.String(64))
+    mac = db.Column(db.String(64))
+    username = db.Column(db.String(128))
+    anydesk = db.Column(db.String(128))
+    inventory = db.Column(db.JSON)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+  <title>All hosts</title>
+  <meta charset="utf-8">
+</head>
+<body>
+  <h1>Todos os hosts</h1>
+  <form method="get" action="{{ url_for('hosts.all_hosts') }}">
+    <input type="text" name="q" placeholder="Pesquisar por hostname" value="{{ q }}">
+    <button type="submit">Pesquisar</button>
+    <a href="{{ url_for('hosts.teste') }}">Página de teste</a>
+  </form>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul>
+      {% for category, msg in messages %}
+        <li><strong>{{ category }}</strong>: {{ msg }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <table border="1" cellpadding="4" cellspacing="0">
+    <tr>
+      <th>Hostname</th>
+      <th>IP</th>
+      <th>MAC</th>
+      <th>Serial</th>
+      <th>Modelo</th>
+      <th>Status</th>
+      <th>Username</th>
+      <th>Anydesk</th>
+      <th>Salvar</th>
+      <th>Raw</th>
+    </tr>
+    {% for h in hosts %}
+    <tr>
+      <form method="post" action="{{ url_for('hosts.update_host', hostid=h.hostid) }}">
+        <td><input type="hidden" name="hostname" value="{{ h.host }}">{{ h.host }}</td>
+        <td><input type="hidden" name="ip" value="{{ h.ip }}">{{ h.ip }}</td>
+        <td><input type="hidden" name="mac" value="{{ h.mac }}">{{ h.mac }}</td>
+        <td>{{ h.serial }}</td>
+        <td>{{ h.model }}</td>
+        <td>{% if h.available == "1" %}🟢 Online{% else %}🔴 Offline{% endif %}</td>
+        <td><input name="username" value="{{ h.override_username or '' }}"></td>
+        <td><input name="anydesk" value="{{ h.override_anydesk or '' }}"></td>
+        <td><button type="submit">Salvar</button></td>
+        <td><pre style="max-width:300px;overflow:auto">{{ h.raw_inventory }}</pre></td>
+      </form>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
