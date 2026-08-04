@@ -7,37 +7,37 @@
 <body>
 <h1>Dashboard</h1>
 <table border="1" cellpadding="6" cellspacing="0">
-<tr>
-<th>Hostname</th>
-<th>IP</th>
-<th>Serial</th>
-<th>Modelo</th>
-<th>MAC</th>
-<th>Username</th>
-<th>Anydesk</th>
-<th>Detalhes</th>
-<th>Status</th>
-</tr>
+  <tr>
+    <th>Hostname</th>
+    <th>IP</th>
+    <th>Serial</th>
+    <th>Modelo</th>
+    <th>MAC</th>
+    <th>Username</th>
+    <th>Anydesk</th>
+    <th>Detalhes</th>
+    <th>Status</th>
+  </tr>
 
-{% for h in hosts %}
-<tr>
-<td>{{ h.host }}</td>
-<td>{{ (h.interfaces[0].ip if h.interfaces) }}</td>
-<td>{{ h.inventory.serialno_a }}</td>
-<td>{{ h.inventory.model }}</td>
-<td>{{ h.inventory.macaddress_a }}</td>
-<td><!-- override não mostrado nesta lista, use /all para editar --></td>
-<td></td>
-<td><a href="{{ url_for('hosts.all_hosts') }}?q={{ h.host }}">Ver</a></td>
-<td>
-{% if h.available == "1" %}
-🟢 Online
-{% else %}
-🔴 Offline
-{% endif %}
-</td>
-</tr>
-{% endfor %}
+  {% for h in hosts %}
+  <tr>
+    <td>{{ h.host }}</td>
+    <td>{{ (h.interfaces[0].ip if h.interfaces) or '' }}</td>
+    <td>{{ (h.inventory.serialno_a if h.inventory) or '' }}</td>
+    <td>{{ (h.inventory.model if h.inventory) or '' }}</td>
+    <td>{{ (h.inventory.macaddress_a if h.inventory) or '' }}</td>
+    <td><!-- override não mostrado nesta lista, use /all para editar --></td>
+    <td></td>
+    <td><a href="{{ url_for('hosts.all_hosts') }}?q={{ h.host }}">Ver</a></td>
+    <td>
+    {% if h.available|int == 1 %}
+    🟢 Online
+    {% else %}
+    🔴 Offline
+    {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
 
 </table>
 </body>

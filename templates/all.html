@@ -38,12 +38,13 @@
     {% for h in hosts %}
     <tr>
       <form method="post" action="{{ url_for('hosts.update_host', hostid=h.hostid) }}">
+        <input type="hidden" name="hostid" value="{{ h.hostid }}">
         <td><input type="hidden" name="hostname" value="{{ h.host }}">{{ h.host }}</td>
-        <td><input type="hidden" name="ip" value="{{ h.ip }}">{{ h.ip }}</td>
-        <td><input type="hidden" name="mac" value="{{ h.mac }}">{{ h.mac }}</td>
-        <td>{{ h.serial }}</td>
-        <td>{{ h.model }}</td>
-        <td>{% if h.available == "1" %}🟢 Online{% else %}🔴 Offline{% endif %}</td>
+        <td><input type="hidden" name="ip" value="{{ h.ip or '' }}">{{ h.ip or '' }}</td>
+        <td><input type="hidden" name="mac" value="{{ h.mac or '' }}">{{ h.mac or '' }}</td>
+        <td>{{ h.serial or '' }}</td>
+        <td>{{ h.model or '' }}</td>
+        <td>{% if h.available|int == 1 %}🟢 Online{% else %}🔴 Offline{% endif %}</td>
         <td><input name="username" value="{{ h.override_username or '' }}"></td>
         <td><input name="anydesk" value="{{ h.override_anydesk or '' }}"></td>
         <td><button type="submit">Salvar</button></td>

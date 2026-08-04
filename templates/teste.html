@@ -7,12 +7,16 @@
   <h1>Página de Teste</h1>
   <p>Use esta página para validar chamadas ao Zabbix e ver dados brutos.</p>
   <table border="1">
-    <tr><th>Hostname</th><th>IP</th><th>MAC</th></tr>
+    <tr><th>Hostname</th><th>IP</th><th>MAC</th><th>Available</th></tr>
     {% for h in hosts %}
     <tr>
       <td>{{ h.host }}</td>
-      <td>{{ (h.interfaces[0].ip if h.interfaces) }}</td>
-      <td>{{ h.inventory.macaddress_a }}</td>
+      <td>{{ (h.interfaces[0].ip if h.interfaces) or '' }}</td>
+      <td>{{ (h.inventory.macaddress_a if h.inventory) or '' }}</td>
+      <td>{{ h.available }}</td>
+    </tr>
+    <tr>
+      <td colspan="4"><pre style="max-width:900px;overflow:auto">{{ h | tojson(indent=2) }}</pre></td>
     </tr>
     {% endfor %}
   </table>
