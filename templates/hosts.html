@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+{% block content %}
+  <h1>Hosts</h1>
+  <ul class="list-group">
+    {% for h in hosts %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ h.host }}</strong><br>
+          <small class="text-muted">{{ (h.interfaces[0].ip if h.interfaces) or 'no ip' }}</small>
+        </div>
+        <a href="{{ url_for('hosts.all_hosts') }}?q={{ h.host }}" class="btn btn-sm btn-outline-primary">Ver</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

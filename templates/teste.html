@@ -1,13 +1,11 @@
-<!doctype html>
-<html>
-<head><title>Teste</title>
-<meta charset="utf-8">
-</head>
-<body>
+{% extends 'layout.html' %}
+{% block content %}
   <h1>Página de Teste</h1>
   <p>Use esta página para validar chamadas ao Zabbix e ver dados brutos.</p>
-  <table border="1">
-    <tr><th>Hostname</th><th>IP</th><th>MAC</th><th>Available</th></tr>
+  <div class="table-responsive">
+  <table class="table table-sm table-bordered">
+    <thead class="table-light"><tr><th>Hostname</th><th>IP</th><th>MAC</th><th>Available</th></tr></thead>
+    <tbody>
     {% for h in hosts %}
     <tr>
       <td>{{ h.host }}</td>
@@ -16,9 +14,10 @@
       <td>{{ h.available }}</td>
     </tr>
     <tr>
-      <td colspan="4"><pre style="max-width:900px;overflow:auto">{{ h | tojson(indent=2) }}</pre></td>
+      <td colspan="4"><pre>{{ h | tojson(indent=2) }}</pre></td>
     </tr>
     {% endfor %}
+    </tbody>
   </table>
-</body>
-</html>
+  </div>
+{% endblock %}
