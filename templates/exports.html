@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block content %}
+  <h1>Exports</h1>
+  <p>Arquivos gerados automaticamente com data e horário.</p>
+  <ul class="list-group">
+    {% for f in files %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ f.name }}</strong><br>
+          <small class="text-muted">{{ f.mtime | int | datetimeformat }}</small>
+        </div>
+        <div>
+          <a class="btn btn-sm btn-outline-primary me-2" href="{{ url_for('hosts.exports_view', filename=f.name) }}">Ver</a>
+          <a class="btn btn-sm btn-success" href="{{ url_for('hosts.exports_download', filename=f.name) }}">Download</a>
+        </div>
+      </li>
+    {% else %}
+      <li class="list-group-item">Nenhum export encontrado</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

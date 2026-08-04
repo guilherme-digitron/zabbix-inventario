@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+{% block content %}
+  <h1>Visualizar export: {{ filename }}</h1>
+  <a class="btn btn-sm btn-outline-secondary mb-2" href="{{ url_for('hosts.exports_list') }}">Voltar</a>
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered">
+      <tbody>
+        {% for row in rows %}
+          {% if loop.index0 == 0 %}
+            <thead class="table-dark"><tr>{% for col in row %}<th>{{ col }}</th>{% endfor %}</tr></thead>
+          {% else %}
+            <tr>{% for col in row %}<td>{{ col }}</td>{% endfor %}</tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

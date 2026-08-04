@@ -1,0 +1,19 @@
+body {
+  background: #f8f9fb;
+  color: #222;
+}
+
+table th, table td {
+  vertical-align: middle !important;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.container pre {
+  background: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #e6e9ef;
+}
