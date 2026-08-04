@@ -11,6 +11,19 @@ app.secret_key = app.config.get('SECRET_KEY', 'dev')
 # importa models para que create_all crie as tabelas
 import database.models
 
+# add jinja filters
+from datetime import datetime
+
+def datetimeformat(value):
+    try:
+        return datetime.fromtimestamp(int(value)).strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        return value
+
+
+app.jinja_env.filters['datetimeformat'] = datetimeformat
+
+
 db.init_app(app)
 
 with app.app_context():

@@ -19,11 +19,11 @@
     <tr>
       <td>{{ h.host }}</td>
       <td>{{ (h.interfaces[0].ip if h.interfaces) or '' }}</td>
-      <td>{{ (h.inventory.serialno_a if h.inventory) or '' }}</td>
-      <td>{{ (h.inventory.model if h.inventory) or '' }}</td>
-      <td>{{ (h.inventory.macaddress_a if h.inventory) or '' }}</td>
+      <td>{{ (h.inventory.serialno_a if h.inventory is defined else '') }}</td>
+      <td>{{ (h.inventory.model if h.inventory is defined else '') }}</td>
+      <td>{{ (h.inventory.macaddress_a if h.inventory is defined else '') }}</td>
       <td><a href="{{ url_for('hosts.all_hosts') }}?q={{ h.host }}">Ver</a></td>
-      <td>{% if h.available|int == 1 %}<span class="text-success">🟢 Online</span>{% else %}<span class="text-danger">🔴 Offline</span>{% endif %}</td>
+      <td>{% if (h.available|default(0)|int) == 1 %}<span class="text-success">🟢 Online</span>{% else %}<span class="text-danger">🔴 Offline</span>{% endif %}</td>
     </tr>
     {% endfor %}
     </tbody>
