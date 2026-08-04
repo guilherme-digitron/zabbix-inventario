@@ -30,10 +30,12 @@ def call(method,params):
     return r.json()["result"]
 
 def get_hosts():
+    # inclui hostid para referência e busca
     return call(
         "host.get",
         {
             "output": [
+                "hostid",
                 "host",
                 "name",
                 "status",
