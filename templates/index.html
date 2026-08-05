@@ -7,24 +7,38 @@
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <main>
-      <h1>Dashboard</h1>
-      <p>Somente as colunas: hostname, IP, MAC address, modelo, OS, Status</p>
-      <table id="devices">
-        <thead>
-          <tr>
-            <th>Hostname</th>
-            <th>IP</th>
-            <th>MAC address</th>
-            <th>Modelo</th>
-            <th>OS</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- preenchido por JS -->
-        </tbody>
-      </table>
+    <main class="container">
+      <header class="header">
+        <h1>Inventário</h1>
+        <p class="subtitle">Hostname, IP, MAC address, Modelo, OS, Status</p>
+      </header>
+
+      <section class="controls">
+        <input id="search" placeholder="Pesquisar por hostname, IP, MAC, modelo, OS, status..." />
+        <div id="count" class="count">—</div>
+      </section>
+
+      <section class="card">
+        <table id="devices">
+          <thead>
+            <tr>
+              <th>Hostname</th>
+              <th>IP</th>
+              <th>MAC address</th>
+              <th>Modelo</th>
+              <th>OS</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- preenchido por JS -->
+          </tbody>
+        </table>
+      </section>
+
+      <footer class="footer">
+        <small>Aplicação mínima — dados obtidos via Zabbix JSON-RPC</small>
+      </footer>
     </main>
 
     <script>
@@ -35,24 +49,65 @@
         return '';
       }
 
+      function normalizeText(s) {
+        return (s || '').toString().toLowerCase();
+      }
+
+      function rowMatches(rowText, tokens) {
+        for (const t of tokens) {
+          if (!rowText.includes(t)) return false;
+        }
+        return true;
+      }
+
       async function loadDevices() {
         try {
           const res = await fetch('/api/devices');
           const devices = await res.json();
           const tbody = document.querySelector('#devices tbody');
+          const count = document.getElementById('count');
           tbody.innerHTML = '';
+
+          // store rendered rows for filtering
+          const rendered = [];
+
           for (const d of devices) {
             const tr = document.createElement('tr');
+            const macDisplay = (d.mac || '').toString();
             tr.innerHTML = `
-              <td>${d.hostname || ''}</td>
-              <td>${d.ip || ''}</td>
-              <td>${d.mac || ''}</td>
-              <td>${d.model || ''}</td>
-              <td>${d.os || ''}</td>
-              <td class="${statusClass(d.status)}">${d.status || ''}</td>
+              <td class="cell-hostname">${d.hostname || ''}</td>
+              <td class="cell-ip">${d.ip || ''}</td>
+              <td class="cell-mac">${macDisplay}</td>
+              <td class="cell-model">${d.model || ''}</td>
+              <td class="cell-os">${d.os || ''}</td>
+              <td class="cell-status ${statusClass(d.status)}">${d.status || ''}</td>
             `;
+
+            // prepare searchable text
+            const rowText = normalizeText([d.hostname, d.ip, macDisplay, d.model, d.os, d.status].join(' '));
+            rendered.push({tr, rowText});
             tbody.appendChild(tr);
           }
+
+          count.textContent = `${rendered.length} máquinas`;
+
+          // Setup search
+          const input = document.getElementById('search');
+          input.addEventListener('input', function() {
+            const q = normalizeText(this.value).trim();
+            const tokens = q.length ? q.split(/\s+/) : [];
+            let visible = 0;
+            for (const r of rendered) {
+              if (!tokens.length || rowMatches(r.rowText, tokens)) {
+                r.tr.style.display = '';
+                visible += 1;
+              } else {
+                r.tr.style.display = 'none';
+              }
+            }
+            count.textContent = `${visible} / ${rendered.length}`;
+          });
+
         } catch (e) {
           console.error('Erro ao carregar dispositivos', e);
         }

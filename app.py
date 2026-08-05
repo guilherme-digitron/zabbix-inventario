@@ -1,5 +1,8 @@
 import os
 import requests
+import json
+import ast
+import re
 from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
@@ -12,8 +15,8 @@ ZABBIX_API_TOKEN = os.getenv('ZABBIX_API_TOKEN')  # your Zabbix API token (auth)
 MAC_KEY = 'wmi.getall[root\\cimv2,"select MACAddress from win32_networkadapter where PhysicalAdapter=True"]'
 MODEL_KEY = 'wmi.get[root\\cimv2,SELECT Model FROM Win32_ComputerSystem]'
 
-# Fallback behavior: do not hardcode sensitive tokens in the repo.
-# If env vars are not set, the API will return an error instructing how to configure them.
+MAC_REGEX = re.compile(r'([0-9A-Fa-f]{2}(?:[:\-][0-9A-Fa-f]{2}){5})')
+
 
 def zabbix_request(method, params):
     if not ZABBIX_URL:
@@ -35,6 +38,73 @@ def zabbix_request(method, params):
     if 'error' in data:
         raise RuntimeError(f"Zabbix API error: {data['error']}")
     return data.get('result')
+
+
+def extract_macs_from_value(value):
+    """Extract MAC addresses from a Zabbix item lastvalue.
+
+    The value can be:
+    - a JSON string representing a list of objects: [{"MACAddress": "..."}, ...]
+    - a plain string that may contain MAC addresses
+    - an empty or unusual format
+
+    Returns a comma-separated string with normalized MACs (XX:XX:...)
+    or empty string if none found.
+    """
+    if not value:
+        return ''
+
+    candidates = []
+
+    # Try to interpret as JSON
+    if isinstance(value, (list, dict)):
+        data = value
+    else:
+        # value is a string: try json.loads, then ast.literal_eval as fallback
+        data = None
+        try:
+            data = json.loads(value)
+        except Exception:
+            try:
+                # sometimes Zabbix stores a Python-like repr; ast.literal_eval can handle it
+                data = ast.literal_eval(value)
+            except Exception:
+                data = None
+
+    # If data is a list/dict, try to find MACAddress fields
+    if isinstance(data, list):
+        for entry in data:
+            if isinstance(entry, dict):
+                for v in entry.values():
+                    if not v:
+                        continue
+                    # v might be a MAC or string containing a MAC
+                    found = MAC_REGEX.findall(str(v))
+                    for m in found:
+                        candidates.append(m)
+    elif isinstance(data, dict):
+        for v in data.values():
+            if not v:
+                continue
+            found = MAC_REGEX.findall(str(v))
+            for m in found:
+                candidates.append(m)
+    else:
+        # Treat the original value as text and extract MAC patterns
+        found = MAC_REGEX.findall(str(value))
+        for m in found:
+            candidates.append(m)
+
+    # Normalize (replace - with : and uppercase) and deduplicate while preserving order
+    normalized = []
+    seen = set()
+    for m in candidates:
+        nm = m.replace('-', ':').upper()
+        if nm not in seen:
+            seen.add(nm)
+            normalized.append(nm)
+
+    return ', '.join(normalized)
 
 
 @app.route('/')
@@ -72,6 +142,7 @@ def api_devices():
             'output': ['itemid', 'hostid', 'lastvalue', 'key_'],
             'hostids': hostids,
             'filter': {'key_': [MAC_KEY, MODEL_KEY]},
+            'preservekeys': True,
         }
         items = zabbix_request('item.get', item_params)
 
@@ -126,9 +197,12 @@ def api_devices():
                 key = it.get('key_') or ''
                 last = it.get('lastvalue') or ''
                 if key == MAC_KEY and last:
-                    mac = last
+                    extracted = extract_macs_from_value(last)
+                    if extracted:
+                        mac = extracted
                 if key == MODEL_KEY and last:
-                    model = last
+                    # last may be a plain string or JSON - we'll try to parse
+                    model = str(last)
 
             devices.append({
                 'hostname': hostname,
