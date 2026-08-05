@@ -27,3 +27,13 @@ th {
   background: #fafafa;
   font-weight: 600;
 }
+
+.status-online {
+  color: #0b6f2d;
+  font-weight: 700;
+}
+
+.status-offline {
+  color: #c23030;
+  font-weight: 700;
+}
