@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - Inventário</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Dashboard</h1>
+      <p>Somente as colunas: hostname, IP, MAC address, modelo, OS</p>
+      <table id="devices">
+        <thead>
+          <tr>
+            <th>Hostname</th>
+            <th>IP</th>
+            <th>MAC address</th>
+            <th>Modelo</th>
+            <th>OS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- preenchido por JS -->
+        </tbody>
+      </table>
+    </main>
+
+    <script>
+      async function loadDevices() {
+        try {
+          const res = await fetch('/api/devices');
+          const devices = await res.json();
+          const tbody = document.querySelector('#devices tbody');
+          tbody.innerHTML = '';
+          for (const d of devices) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${d.hostname || ''}</td>
+              <td>${d.ip || ''}</td>
+              <td>${d.mac || ''}</td>
+              <td>${d.model || ''}</td>
+              <td>${d.os || ''}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        } catch (e) {
+          console.error('Erro ao carregar dispositivos', e);
+        }
+      }
+      loadDevices();
+    </script>
+  </body>
+</html>

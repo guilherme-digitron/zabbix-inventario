@@ -1,27 +1,21 @@
-from flask import Flask
+from flask import Flask, render_template, jsonify
 
-from database.database import db
-
-# inicialização normal da aplicação
 app = Flask(__name__)
-app.config.from_pyfile("config.py")
-# garante secret key para flash
-app.secret_key = app.config.get('SECRET_KEY', 'dev')
 
-# importa models para que create_all crie as tabelas
-import database.models
+# Minimal sample data. Replace this with real data source as needed.
+SAMPLE_DEVICES = [
+    {"hostname": "host1.example.local", "ip": "192.168.1.10", "mac": "AA:BB:CC:DD:EE:01", "model": "Dell R740", "os": "Ubuntu 20.04"},
+    {"hostname": "host2.example.local", "ip": "192.168.1.11", "mac": "AA:BB:CC:DD:EE:02", "model": "HP ProLiant DL360", "os": "CentOS 7"},
+]
 
-db.init_app(app)
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-with app.app_context():
-    # cria tabelas (HostOverride)
-    db.create_all()
+@app.route('/api/devices')
+def api_devices():
+    # In the future, replace SAMPLE_DEVICES with real backend/database/API.
+    return jsonify(SAMPLE_DEVICES)
 
-from routes.dashboard import dashboard
-from routes.hosts import hosts
-
-app.register_blueprint(dashboard)
-app.register_blueprint(hosts)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=5000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
