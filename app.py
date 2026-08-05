@@ -34,8 +34,14 @@ def zabbix_request(method, params):
     headers = {'Content-Type': 'application/json-rpc'}
     r = requests.post(ZABBIX_URL, json=payload, headers=headers, timeout=15)
     r.raise_for_status()
-    data = r.json()
+    try:
+        data = r.json()
+    except ValueError:
+        print('Zabbix returned non-JSON response (first 1000 chars):')
+        print(r.text[:1000])
+        raise RuntimeError('Zabbix returned non-JSON response; see server logs for details')
     if 'error' in data:
+        print('Zabbix API returned error object:', data['error'])
         raise RuntimeError(f"Zabbix API error: {data['error']}")
     return data.get('result')
 
@@ -56,17 +62,15 @@ def extract_macs_from_value(value):
 
     candidates = []
 
-    # Try to interpret as JSON
+    # Try to interpret as JSON or Python literal
+    data = None
     if isinstance(value, (list, dict)):
         data = value
     else:
-        # value is a string: try json.loads, then ast.literal_eval as fallback
-        data = None
         try:
             data = json.loads(value)
         except Exception:
             try:
-                # sometimes Zabbix stores a Python-like repr; ast.literal_eval can handle it
                 data = ast.literal_eval(value)
             except Exception:
                 data = None
@@ -78,10 +82,14 @@ def extract_macs_from_value(value):
                 for v in entry.values():
                     if not v:
                         continue
-                    # v might be a MAC or string containing a MAC
                     found = MAC_REGEX.findall(str(v))
                     for m in found:
                         candidates.append(m)
+            else:
+                # entry might be a plain string containing MACs
+                found = MAC_REGEX.findall(str(entry))
+                for m in found:
+                    candidates.append(m)
     elif isinstance(data, dict):
         for v in data.values():
             if not v:
@@ -132,30 +140,69 @@ def api_devices():
         }
         hosts = zabbix_request('host.get', params)
 
+        # Validate response
+        if not isinstance(hosts, list):
+            return jsonify({'error': f'Unexpected Zabbix response for host.get: {type(hosts)}'}), 500
+
         if not hosts:
             return jsonify([])
 
-        hostids = [h['hostid'] for h in hosts]
+        hostids = [h.get('hostid') for h in hosts if isinstance(h, dict) and 'hostid' in h]
+
+        if not hostids:
+            return jsonify([])
 
         # 2) Get items for MAC and Model across all hosts in one call
         item_params = {
             'output': ['itemid', 'hostid', 'lastvalue', 'key_'],
             'hostids': hostids,
             'filter': {'key_': [MAC_KEY, MODEL_KEY]},
-            'preservekeys': True,
         }
         items = zabbix_request('item.get', item_params)
 
-        # Map items by hostid
+        # Ensure items is a list
+        if isinstance(items, dict):
+            items = [items]
+        if not isinstance(items, list):
+            return jsonify({'error': f'Unexpected Zabbix response for item.get: {type(items)}'}), 500
+
+        # Map items by hostid with defensive parsing
         items_by_host = {}
-        for it in items or []:
+        for it in items:
+            original_it = it
+            if isinstance(it, dict):
+                parsed = it
+            elif isinstance(it, str):
+                # try to parse the string as JSON or Python literal
+                parsed = None
+                try:
+                    parsed = json.loads(it)
+                except Exception:
+                    try:
+                        parsed = ast.literal_eval(it)
+                    except Exception:
+                        parsed = None
+                if isinstance(parsed, dict):
+                    it = parsed
+                else:
+                    print('Skipping item entry that is a string and could not be parsed as dict:', repr(original_it))
+                    continue
+            else:
+                print('Skipping item entry of unexpected type:', type(original_it), repr(original_it))
+                continue
+
             hid = it.get('hostid')
-            if hid not in items_by_host:
-                items_by_host[hid] = []
-            items_by_host[hid].append(it)
+            if not hid:
+                print('Skipping item without hostid:', repr(it))
+                continue
+            items_by_host.setdefault(hid, []).append(it)
 
         devices = []
         for h in hosts:
+            if not isinstance(h, dict):
+                print('Skipping non-dict host entry:', repr(h))
+                continue
+
             hostname = h.get('host') or ''
 
             # IP from interfaces (useip == '1' or main == '1')
@@ -193,15 +240,16 @@ def api_devices():
             os_field = inv.get('os') or inv.get('os_full') or inv.get('osfull') or ''
 
             # Override with item values if present
-            for it in items_by_host.get(h['hostid'], []):
-                key = it.get('key_') or ''
-                last = it.get('lastvalue') or ''
+            for it in items_by_host.get(h.get('hostid', ''), []):
+                if not isinstance(it, dict):
+                    continue
+                key = it.get('key_', '')
+                last = it.get('lastvalue', '')
                 if key == MAC_KEY and last:
                     extracted = extract_macs_from_value(last)
                     if extracted:
                         mac = extracted
                 if key == MODEL_KEY and last:
-                    # last may be a plain string or JSON - we'll try to parse
                     model = str(last)
 
             devices.append({
@@ -220,7 +268,11 @@ def api_devices():
     except requests.exceptions.RequestException as e:
         return jsonify({'error': f'Network error when contacting Zabbix: {e}'}), 502
     except Exception as e:
-        return jsonify({'error': f'Unexpected error: {e}'}), 500
+        # Provide more debugging information in the response while running in debug
+        import traceback
+        tb = traceback.format_exc()
+        print('Unexpected exception in /api/devices:', tb)
+        return jsonify({'error': f'Unexpected error: {str(e)}', 'trace': tb}), 500
 
 
 if __name__ == '__main__':
