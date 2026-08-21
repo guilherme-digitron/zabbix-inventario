@@ -7,6 +7,18 @@ from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
 
+# Tornar o pacote do módulo importável quando a pasta for `mapeamento-de-rede/mapeamento_de_rede`
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'mapeamento-de-rede'))
+try:
+    from mapeamento_de_rede import rede_bp
+    from mapeamento_de_rede import api as rede_api_module
+    app.register_blueprint(rede_bp)
+    app.register_blueprint(rede_api_module.api_bp)
+    print("[INFO] mapeamento_de_rede blueprint registrado")
+except Exception as e:
+    print("[WARN] não foi possível registrar mapeamento_de_rede:", e)
+
 # Configuration: set these as environment variables for production
 ZABBIX_URL = os.getenv('ZABBIX_URL')  # e.g. http://192.168.3.141/api_jsonrpc.php
 ZABBIX_API_TOKEN = os.getenv('ZABBIX_API_TOKEN')  # your Zabbix API token (auth)
