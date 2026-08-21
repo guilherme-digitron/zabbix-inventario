@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <title>Mapa de Rede</title>
-  <link rel="stylesheet" href="/mapeamento-de-rede/static/css/rede.css">
-  <!-- Atenção: baixe a lib Cytoscape localmente em mapeamento-de-rede/static/js/cytoscape.min.js -->
-  <script src="/mapeamento-de-rede/static/js/cytoscape.min.js"></script>
-  <script src="/mapeamento-de-rede/static/js/rede.js" defer></script>
+  <link rel="stylesheet" href="{{ url_for('rede.static', filename='css/rede.css') }}">
+  <!-- Usamos CDN para Cytoscape como fallback rápido; para uso offline baixe em mapeamento-de-rede/static/js/cytoscape.min.js -->
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+  <script src="{{ url_for('rede.static', filename='js/rede.js') }}" defer></script>
 </head>
 <body>
   <header>
