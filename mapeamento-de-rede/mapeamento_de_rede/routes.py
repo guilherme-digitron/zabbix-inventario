@@ -2,9 +2,10 @@ import os
 from flask import Blueprint, render_template
 
 # Resolve paths to module-level templates/static directories (absolute paths)
-pkg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-template_folder = os.path.join(pkg_dir, 'templates')
-static_folder = os.path.join(pkg_dir, 'static')
+# __file__ is .../mapeamento_de_rede/routes.py; we want the module root at mapeamento-de-rede (two levels up)
+module_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+template_folder = os.path.join(module_root, 'templates')
+static_folder = os.path.join(module_root, 'static')
 
 # Expose static files under /mapeamento-de-rede/static
 rede_bp = Blueprint(
