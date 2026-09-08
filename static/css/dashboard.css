@@ -1,0 +1,83 @@
+/* Dashboard Specific Styles */
+
+.scan-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.scan-progress {
+    flex: 1;
+    min-width: 200px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-bar::after {
+    content: '';
+    display: block;
+    width: 0%;
+    height: 100%;
+    background-color: #667eea;
+    animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+    0% { width: 0%; }
+    50% { width: 100%; }
+    100% { width: 0%; }
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+}
+
+.activity-time {
+    color: #999;
+    font-size: 12px;
+    margin-right: 12px;
+}
+
+.activity-text {
+    flex: 1;
+}
+
+.activity-text strong {
+    color: #333;
+}
+
+.activity-text .ip {
+    font-family: monospace;
+    color: #667eea;
+}
+
+.activity-item.new {
+    border-left-color: #48bb78;
+}
+
+.activity-item.offline {
+    border-left-color: #f56565;
+}
+
+.activity-item.change {
+    border-left-color: #ed8936;
+}
