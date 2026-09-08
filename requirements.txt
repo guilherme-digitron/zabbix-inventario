@@ -1,2 +1,31 @@
-Flask
-requests
+# Dependências do Sistema de Descoberta de Rede
+
+# Framework Web
+Flask==2.3.0
+Werkzeug==2.3.0
+
+# API e dados
+requests==2.31.0
+python-dateutil==2.8.2
+
+# Banco de dados
+sqlite3  # Incluído no Python
+
+# Scanning de rede
+# Nmap deve ser instalado no sistema operacional
+# pip install python-nmap  # Opcional
+
+# SNMP (opcional)
+# pysnmp==4.4.12  # Descomente se usar SNMP
+
+# Logging e monitoramento
+python-json-logger==2.0.7
+
+# Validação
+ipaddress  # Incluído no Python 3.3+
+
+# Desenvolvimento (opcional)
+# pytest==7.4.0
+# pytest-cov==4.1.0
+# flake8==6.0.0
+# black==23.7.0
