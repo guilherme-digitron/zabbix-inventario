@@ -1,2 +1,0 @@
-# dependências adicionais para o módulo (além do requirements do projeto)
-python-dateutil
