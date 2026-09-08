@@ -74,12 +74,16 @@ class Device:
 
     def to_dict(self):
         """Converte o dispositivo para dicionário"""
+        # Garante que device_type e status sejam strings
+        device_type_str = self.device_type.value if isinstance(self.device_type, Enum) else self.device_type
+        status_str = self.status.value if isinstance(self.status, Enum) else self.status
+        
         return {
             'ip': self.ip,
             'mac': self.mac or 'Desconhecido',
             'hostname': self.hostname or 'Desconhecido',
-            'type': self.device_type.value,
-            'status': self.status.value,
+            'type': device_type_str,
+            'status': status_str,
             'os': self.os,
             'model': self.model,
             'vendor': self.vendor,
@@ -135,12 +139,15 @@ class Connection:
         self.metadata = {}
 
     def to_dict(self):
+        # Garante que connection_type seja string
+        conn_type_str = self.connection_type.value if isinstance(self.connection_type, Enum) else self.connection_type
+        
         return {
             'source_ip': self.source_ip,
             'destination_ip': self.destination_ip,
             'source_interface': self.source_interface,
             'destination_interface': self.destination_interface,
-            'type': self.connection_type.value,
+            'type': conn_type_str,
             'method': self.discovery_method,
             'confidence': self.confidence,
             'confirmed': self.confirmed,
@@ -180,27 +187,22 @@ class Scan:
         self.network_cidr = network_cidr
         self.start_time = datetime.now()
         self.end_time = None
-        self.status = 'running'  # running, completed, failed
+        self.status = 'running'
         self.devices_found = 0
         self.devices_online = 0
         self.devices_new = 0
         self.devices_offline = 0
         self.manual = manual
-        self.notes = ''
         self.methods_used = []
+        self.notes = ''
 
     def to_dict(self):
-        duration = None
-        if self.end_time:
-            duration = (self.end_time - self.start_time).total_seconds()
-        
         return {
             'scan_id': self.scan_id,
             'network_cidr': self.network_cidr,
             'start_time': self.start_time.isoformat(),
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'status': self.status,
-            'duration_seconds': duration,
             'devices_found': self.devices_found,
             'devices_online': self.devices_online,
             'devices_new': self.devices_new,
@@ -208,26 +210,4 @@ class Scan:
             'manual': self.manual,
             'methods_used': self.methods_used,
             'notes': self.notes
-        }
-
-
-class DeviceHistory:
-    """Histórico de alterações de um dispositivo"""
-    
-    def __init__(self, device_ip, change_type, old_value=None, new_value=None):
-        self.device_ip = device_ip
-        self.timestamp = datetime.now()
-        self.change_type = change_type  # ip_change, mac_change, hostname_change, online, offline, new, removed
-        self.old_value = old_value
-        self.new_value = new_value
-        self.scan_id = None
-
-    def to_dict(self):
-        return {
-            'device_ip': self.device_ip,
-            'timestamp': self.timestamp.isoformat(),
-            'change_type': self.change_type,
-            'old_value': self.old_value,
-            'new_value': self.new_value,
-            'scan_id': self.scan_id
         }
