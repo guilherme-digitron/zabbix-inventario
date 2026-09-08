@@ -144,7 +144,15 @@ class DiscoveryEngine:
             }
     
     def _run_scanners(self, network_cidr: str) -> List[Device]:
-        """Executa todos os scanners em paralelo"""
+        """Executa todos os scanners em paralelo
+        
+        BUG FIX:
+        - Removido timeout curto artificial (DISCOVERY_TIMEOUT=30s) que causava
+          TimeoutExpired/TimeoutError ao executar 3 varreduras nmap sequenciais
+        - Mudado de concurrent.futures.TimeoutExpired (não existe) para 
+          concurrent.futures.TimeoutError (correto para ThreadPoolExecutor)
+        - Cada scanner tem seu próprio timeout interno (NMAP_TIMEOUT=300s)
+        """
         self.logger.info(f'Executando {len(self.scanners)} scanners em paralelo')
         
         all_devices = {}
@@ -159,7 +167,9 @@ class DiscoveryEngine:
             for future in concurrent.futures.as_completed(futures):
                 scanner_name = futures[future]
                 try:
-                    devices = future.result(timeout=config.DISCOVERY_TIMEOUT)
+                    # Remover timeout curto - deixar cada scanner controlar seu próprio timeout
+                    devices = future.result()
+                    
                     for device in devices:
                         if device.ip not in all_devices:
                             all_devices[device.ip] = device
@@ -175,10 +185,11 @@ class DiscoveryEngine:
                     
                     self.logger.info(f'{scanner_name}: {len(devices)} dispositivos')
                 
-                except concurrent.futures.TimeoutExpired:
+                # CORREÇÃO: usar concurrent.futures.TimeoutError (não TimeoutExpired)
+                except concurrent.futures.TimeoutError:
                     self.logger.warning(f'{scanner_name} timeout')
                 except Exception as e:
-                    self.logger.error(f'Erro em {scanner_name}: {e}')
+                    self.logger.error(f'Erro em {scanner_name}: {e}', exc_info=True)
         
         return list(all_devices.values())
     
