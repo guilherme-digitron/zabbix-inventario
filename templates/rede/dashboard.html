@@ -3,220 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rede - Mapeamento de Topologia</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <title>Mapeamento de Rede</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rede.css') }}">
 </head>
 <body>
-    <div class="container-fluid">
-        <!-- Header -->
+    <div class="container">
         <header class="header">
-            <div class="header-content">
-                <h1>🌐 Mapa de Topologia da Rede</h1>
-                <nav class="nav-tabs">
-                    <a href="#dashboard" class="nav-tab active" data-section="dashboard">Dashboard</a>
-                    <a href="#mapa" class="nav-tab" data-section="mapa">Mapa</a>
-                    <a href="#dispositivos" class="nav-tab" data-section="dispositivos">Dispositivos</a>
-                    <a href="#historico" class="nav-tab" data-section="historico">Histórico</a>
-                    <a href="#configuracoes" class="nav-tab" data-section="configuracoes">Configurações</a>
-                </nav>
-            </div>
+            <h1>🌐 Mapeamento de Rede</h1>
+            <p class="subtitle">Executa a descoberta na hora — nada é salvo, só o resultado da última execução.</p>
         </header>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            
-            <!-- Dashboard Section -->
-            <section id="dashboard" class="section active">
-                <div class="dashboard-grid">
-                    <!-- Summary Cards -->
-                    <div class="card summary-card">
-                        <div class="card-icon">📊</div>
-                        <div class="card-content">
-                            <h3>Total de Dispositivos</h3>
-                            <p class="card-value" id="total-devices">-</p>
-                        </div>
-                    </div>
+        <section class="scan-panel">
+            <label for="network-cidr">Rede (CIDR)</label>
+            <div class="scan-controls">
+                <input type="text" id="network-cidr" value="{{ default_network }}" placeholder="192.168.1.0/24">
+                <button id="btn-scan" class="btn-primary">▶ Executar Mapeamento</button>
+            </div>
+            <div id="status-line" class="status-line"></div>
+        </section>
 
-                    <div class="card summary-card">
-                        <div class="card-icon">🟢</div>
-                        <div class="card-content">
-                            <h3>Dispositivos Online</h3>
-                            <p class="card-value" id="online-devices">-</p>
-                        </div>
-                    </div>
-
-                    <div class="card summary-card">
-                        <div class="card-icon">🔴</div>
-                        <div class="card-content">
-                            <h3>Dispositivos Offline</h3>
-                            <p class="card-value" id="offline-devices">-</p>
-                        </div>
-                    </div>
-
-                    <div class="card summary-card">
-                        <div class="card-icon">⚡</div>
-                        <div class="card-content">
-                            <h3>Portas Abertas</h3>
-                            <p class="card-value" id="open-ports">-</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="card">
-                    <h2>Atividade Recente</h2>
-                    <div id="recent-activity" class="activity-list">
-                        <p class="loading">Carregando...</p>
-                    </div>
-                </div>
-
-                <!-- Scan Controls -->
-                <div class="card">
-                    <h2>Controles de Scan</h2>
-                    <div class="scan-controls">
-                        <button id="btn-scan-now" class="btn btn-primary">▶ Executar Scan Agora</button>
-                        <button id="btn-scan-stop" class="btn btn-danger" disabled>⏹ Parar Scan</button>
-                        <div class="scan-progress" id="scan-progress" style="display: none;">
-                            <div class="progress-bar"></div>
-                            <p>Scan em execução... <span id="scan-percent">0</span>%</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Map Section -->
-            <section id="mapa" class="section">
-                <div class="card">
-                    <h2>Topologia da Rede</h2>
-                    <div class="map-controls">
-                        <input type="text" id="search-device" placeholder="🔍 Pesquisar dispositivo..." class="search-box">
-                        <select id="filter-type" class="filter-select">
-                            <option value="">Todos os Tipos</option>
-                            <option value="router">Router</option>
-                            <option value="switch">Switch</option>
-                            <option value="access_point">Access Point</option>
-                            <option value="server">Server</option>
-                            <option value="desktop">Desktop</option>
-                            <option value="notebook">Notebook</option>
-                            <option value="smartphone">Smartphone</option>
-                            <option value="printer">Printer</option>
-                        </select>
-                        <select id="filter-status" class="filter-select">
-                            <option value="">Todos os Status</option>
-                            <option value="online">Online</option>
-                            <option value="offline">Offline</option>
-                            <option value="unknown">Desconhecido</option>
-                        </select>
-                    </div>
-                    <div id="network-map" class="network-map">
-                        <svg id="topology-svg" width="100%" height="600px"></svg>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Devices Section -->
-            <section id="dispositivos" class="section">
-                <div class="card">
-                    <h2>Lista de Dispositivos</h2>
-                    <table id="devices-table" class="devices-table">
-                        <thead>
-                            <tr>
-                                <th>IP</th>
-                                <th>Hostname</th>
-                                <th>MAC</th>
-                                <th>Tipo</th>
-                                <th>Status</th>
-                                <th>Portas Abertas</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="devices-tbody">
-                            <tr class="loading"><td colspan="7">Carregando...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- History Section -->
-            <section id="historico" class="section">
-                <div class="card">
-                    <h2>Histórico de Scans</h2>
-                    <table id="scans-table" class="scans-table">
-                        <thead>
-                            <tr>
-                                <th>Data/Hora</th>
-                                <th>Rede</th>
-                                <th>Dispositivos</th>
-                                <th>Online</th>
-                                <th>Status</th>
-                                <th>Duração</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scans-tbody">
-                            <tr class="loading"><td colspan="7">Carregando...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Settings Section -->
-            <section id="configuracoes" class="section">
-                <div class="card">
-                    <h2>⚙️ Configurações do Sistema</h2>
-                    <form id="settings-form" class="settings-form">
-                        <div class="form-group">
-                            <label for="cidr-input">CIDR da Rede:</label>
-                            <input type="text" id="cidr-input" placeholder="192.168.1.0/24" class="form-input">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="interval-input">Intervalo de Scan (segundos):</label>
-                            <input type="number" id="interval-input" min="60" step="60" class="form-input">
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="scheduler-toggle" class="form-checkbox">
-                                Habilitar Scanner Automático
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <h3>Scanners Habilitados</h3>
-                            <label>
-                                <input type="checkbox" id="nmap-toggle" class="form-checkbox" disabled>
-                                Nmap
-                            </label>
-                            <label>
-                                <input type="checkbox" id="arp-toggle" class="form-checkbox" disabled>
-                                ARP
-                            </label>
-                            <label>
-                                <input type="checkbox" id="snmp-toggle" class="form-checkbox" disabled>
-                                SNMP
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">💾 Salvar Configurações</button>
-                    </form>
-                </div>
-            </section>
-        </main>
+        <section id="result-panel" class="result-panel" style="display:none;">
+            <div class="result-summary" id="result-summary"></div>
+            <div id="warnings" class="warnings"></div>
+            <div id="tree-container" class="tree-container"></div>
+        </section>
     </div>
 
-    <!-- Device Details Modal -->
-    <div id="device-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div id="modal-body"></div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/topology.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/rede.js') }}"></script>
 </body>
 </html>
